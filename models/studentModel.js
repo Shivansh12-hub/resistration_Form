@@ -84,16 +84,11 @@ const studentSchema = new Schema(
         message: "Provide residence (DayScholar or Hostler)",
       },
     },
-
-    unstopId: {
-      type: String,
-      required: true,
-      trim: true,
-      minlength: [3, "Unstop ID must be at least 3 characters long"],
-      match: [
-        /^[a-zA-Z0-9]+$/,
-        "Unstop ID must contain only letters and numbers",
-      ],
+    rollNumber:{
+        type: String,
+        required: [true, "Student Number is required"],
+        unique:true,
+        trim:true
     },
   },
   { timestamps: true }
