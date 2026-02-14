@@ -20,9 +20,10 @@ const studentSchema = new Schema(
       required: true,
       unique:true,
       match: [
-        /^{25,24}\d{5,8}$/,
-        "Student number must start with 25 and be 7–10 digits long",
-      ],
+  /^(25|24)\d{5,8}$/,
+  "Student number must start with 24 or 25 and be 7–10 digits long",
+],
+
     },
 
     email: {
