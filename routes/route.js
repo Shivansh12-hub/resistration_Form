@@ -1,17 +1,17 @@
 import { Router } from "express";
-// const { registerStudent, verifyStudentRegistration } = require("../controller/student.controller");
+import { slow } from "../middleware/express-slowDown.js";
+// import { limiter } from "./middleware/rateLimiter.js";
 
-import { resisterStudent, resendOTP,  verifyStudentRegistration } from "../controller/resistration.js";
+import { resisterStudent, resendOTP,  verifyStudentRegistration, verifyCaptcha } from "../controller/resistration.js";
 
 
 const router=Router();
 
-router.route("/register").post(  resisterStudent);
+router.route("/register").post(slow,resisterStudent);
 
-router.route("/verify").post( verifyStudentRegistration);
+router.route("/verify").post( slow,verifyStudentRegistration);
 
-// router.route("/verify-captcha").post(verifyCaptcha);
-
-router.route("/resend-otp").get( resendOTP);
+router.route("/resend-otp").post(resendOTP);
+router.route("/verifyCaptcha").post(verifyCaptcha);
 
 export default router

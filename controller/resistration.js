@@ -7,10 +7,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 dotenv.config();
 
-/* ---------------- OTP Utils ---------------- */
+
 const generateOtp = () => Math.floor(1000 + Math.random() * 9000);
 
-/* ---------------- Mail Transporter ---------------- */
+
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -95,6 +95,10 @@ const resisterStudent = asyncHandler(async (req, res) => {
     rollNumber,
     ip: userIp,
   };
+  console.log(req.session.otp);
+  console.log(req.session.userData);
+  console.log(req.session.otpExpiry);
+
 
   await sendOtp({ name, email, otp });
 
@@ -106,15 +110,23 @@ const resisterStudent = asyncHandler(async (req, res) => {
 
 const verifyStudentRegistration = asyncHandler(async (req, res) => {
   const { otp } = req.body;
-
-  if (!req.session.otp || !req.session.userData) {
+  console.log(req.session.otp);
+  console.log
+  console.log(req.session.userData)
+  if (!req.session.otp ) {
     throw new ApiError(400, "OTP session expired. Please restart registration");
   }
+  if (!req.session.userData) {
+    throw new ApiError(400, "failed to user data form sessions");
+  }
 
-  if (Date.now() > req.session.otpExpiry) {
+  if (req.session.otpExpiry< Date.now()) {
     req.session.destroy();
     throw new ApiError(400, "OTP expired");
   }
+  console.log((otp));
+  console.log(String(otp));
+  console.log(String(req.session.otp));
 
   if (String(otp) !== String(req.session.otp)) {
     throw new ApiError(401, "Invalid OTP");
@@ -142,6 +154,10 @@ const resendOTP = asyncHandler(async (req, res) => {
 
   req.session.otp = otp;
   req.session.otpExpiry = otpExpiry;
+  console.log(req.session.otp);
+  console.log(req.session.userData);
+  console.log(req.session.otpExpiry);
+
 
   await sendOtp({ name, email, otp });
 
@@ -150,8 +166,39 @@ const resendOTP = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { email }, "OTP resent successfully"));
 });
 
+const verifyCaptcha = async (req, res) => {
+    const { recaptchaValue } = req.body;
+
+    if (!recaptchaValue) {
+        return res.status(400).json({ message: 'reCAPTCHA value is missing' });
+    }
+
+    try {
+        const { data } = await axios.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            null,
+            {
+                params: {
+                    secret: process.env.RECAPTCHA_SECRET_KEY,
+                    response: recaptchaValue,
+                },
+            }
+        );
+
+        if (data.success) {
+            return res.status(200).json({ message: 'reCAPTCHA verified successfully' });
+        } else {
+            return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+        }
+    } catch (error) {
+        console.error('reCAPTCHA error:', error);
+        return res.status(500).json({ message: 'reCAPTCHA verification error' });
+    }
+};
+
 export {
   resisterStudent,
   verifyStudentRegistration,
   resendOTP,
+  verifyCaptcha
 };
